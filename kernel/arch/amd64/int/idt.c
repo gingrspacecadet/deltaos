@@ -1,6 +1,6 @@
-#include <types.h>
-#include <int/gdt.h>
-#include <int/pic.h>
+#include <arch/amd64/types.h>
+#include <arch/amd64/interrupts.h>
+#include <arch/amd64/timer.h>
 #include <drivers/serial.h>
 #include <drivers/keyboard.h>
 
@@ -26,9 +26,10 @@ struct idtr  {
 
 static struct idtr idtr;
 extern void *isr_stub_table[];
+extern void arch_timer_tick(void);
 
 static void irq0_handler(void) {
-    serial_write("tick\n");
+    arch_timer_tick();
 }
 
 uint64 ticks = 0;
@@ -68,7 +69,7 @@ void interrupt_handler(uint64 vector, uint64 error_code) {
     }
 }
 
-void idt_setgate(uint8 vector, void *isr, uint8 flags) {
+static void idt_setgate(uint8 vector, void *isr, uint8 flags) {
     struct idt_entry *gate = &idt[vector];
 
     gate->isr_low = (uint64)isr & 0xFFFF;
@@ -80,8 +81,7 @@ void idt_setgate(uint8 vector, void *isr, uint8 flags) {
     gate->reserved = 0;
 }
 
-
-void idt_init(void) {
+void arch_interrupts_init(void) {
     gdt_init();
     idtr.base = (uintptr)&idt[0];
     idtr.limit = (uint16)sizeof(idt) - 1;
@@ -94,6 +94,13 @@ void idt_init(void) {
     //remap PIC IRQ0-7 -> vectors 32-39, IRQ8-15 -> vectors 40-47
     pic_remap(0x20, 0x28);
 
-    __asm__ volatile ("lidt %0" : : "m"(idtr)); // load the idt
-    __asm__ volatile ("sti"); // sets the interrupt flag
+    __asm__ volatile ("lidt %0" : : "m"(idtr));
+}
+
+void arch_interrupts_enable(void) {
+    __asm__ volatile ("sti");
+}
+
+void arch_interrupts_disable(void) {
+    __asm__ volatile ("cli");
 }
