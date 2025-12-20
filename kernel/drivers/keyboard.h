@@ -1,11 +1,9 @@
-#if defined(__x86_64__) || defined(_M_X64)
-#include <arch/amd64/drivers/keyboard.h>
-#elif defined(__i386__) || defined(_M_IX86)
-#error Not implemented!
-#elif defined(__aarch64__) || defined(_M_ARM64)
-#error Not implemented!
-#elif defined(__arm__) || defined(_M_ARM)
-#error Not implemented!
-#else
-#error Unknown architecture!
+#ifndef ARCH_AMD64_DRIVERS_KEYBOARD_H
+#define ARCH_AMD64_DRIVERS_KEYBOARD_H
+
+void keyboard_irq(void);
+bool get_key(char *c);
+void keyboard_init(void);
+void keyboard_wait(void);
+
 #endif
