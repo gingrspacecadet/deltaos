@@ -25,6 +25,11 @@ struct idtr  {
 } __attribute__((packed));
 
 static struct idtr idtr;
+extern void *isr_stub_table[];
+
+static void irq0_handler(void) {
+    serial_write("tick\n");
+}
 
 uint64 ticks = 0;
 
@@ -75,7 +80,6 @@ void idt_setgate(uint8 vector, void *isr, uint8 flags) {
     gate->reserved = 0;
 }
 
-extern void *isr_stub_table[];
 
 void idt_init(void) {
     gdt_init();
@@ -87,9 +91,9 @@ void idt_init(void) {
         idt_setgate(vector, isr_stub_table[vector], 0x8E);
     }
 
-    // PIC
+    //remap PIC IRQ0-7 -> vectors 32-39, IRQ8-15 -> vectors 40-47
     pic_remap(0x20, 0x28);
 
-    __asm__ volatile ("lidt %0" : : "m"(idtr)); //load the idt
-    __asm__ volatile ("sti"); //sets the interrupt flag
+    __asm__ volatile ("lidt %0" : : "m"(idtr)); // load the idt
+    __asm__ volatile ("sti"); // sets the interrupt flag
 }
