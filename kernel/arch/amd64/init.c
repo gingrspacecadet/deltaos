@@ -1,15 +1,19 @@
 #include <arch/amd64/types.h>
 #include <arch/amd64/interrupts.h>
 #include <arch/amd64/timer.h>
+#include <boot/db.h>
 #include <drivers/serial.h>
 
 extern void kernel_main(void);
 
-void arch_init(void) {
+void arch_init(struct db_boot_info *boot_info) {
     //early console for debugging
     serial_init();
     serial_write("\x1b[2J\x1b[H");
     serial_write("[amd64] initializing...\n");
+    
+    //parse boot info from bootloader
+    db_parse(boot_info);
     
     //set up interrupt infrastructure
     arch_interrupts_init();

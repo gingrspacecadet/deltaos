@@ -52,6 +52,7 @@ EFI_STATUS elf_load(
     elf_load_info_t *load_info
 ) {
     const Elf64_Ehdr *ehdr = (const Elf64_Ehdr *)elf_data;
+    (void)elf_size;  //validated in elf_validate
     const uint8_t *base = (const uint8_t *)elf_data;
     
     *entry_point = ehdr->e_entry;

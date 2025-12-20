@@ -29,7 +29,6 @@ extern void arch_timer_tick(void);
 
 static void irq0_handler(void) {
     arch_timer_tick();
-    serial_write("tick\n");
 }
 
 void exception_handler(uint64 vector, uint64 error_code) {
