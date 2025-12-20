@@ -3,6 +3,7 @@
 #include <drivers/serial.h>
 #include <int/idt.h>
 #include <int/pit.h>
+#include <drivers/keyboard.h>
 
 int main() {
     serial_init();
@@ -10,9 +11,12 @@ int main() {
 
     idt_init();
     pit_init(1000);
-    // serial_write("IDT initialized triggering int $3 t test\n");
-    // __asm__ volatile ("int $32");
-    // serial_write("returned from interrupt\n");
-    
-    return 0;
+    keyboard_init();
+
+    // keep kernel running so interrupts continue to be delivered
+    while (1) {
+        char *s;
+        if (get_key(s)) serial_write_char(*s);
+        __asm__ volatile ("hlt");
+    }
 }

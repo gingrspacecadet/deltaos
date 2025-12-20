@@ -2,6 +2,7 @@
 #include <int/gdt.h>
 #include <int/pic.h>
 #include <drivers/serial.h>
+#include <drivers/keyboard.h>
 
 struct idt_entry {
 	uint16    isr_low;      // The lower 16 bits of the ISR's address
@@ -25,13 +26,41 @@ struct idtr  {
 
 static struct idtr idtr;
 
-void exception_handler(uint64 vector, uint64 error_code) {
-    serial_write("\nEXCEPTION\n");
-    serial_write("Vector:     ");
-    serial_write_hex(vector);
-    serial_write("\nError Code: ");
-    serial_write_hex(error_code);
-    serial_write("\n");
+uint64 ticks = 0;
+
+void irq0_handler(void) {
+    ticks++;
+}
+
+void interrupt_handler(uint64 vector, uint64 error_code) {
+    if (vector < 32) {
+        serial_write("\nEXCEPTION\n");
+        serial_write("Vector:     ");
+        serial_write_hex(vector);
+        serial_write("\nError Code: ");
+        serial_write_hex(error_code);
+        serial_write("\n");
+        return;
+    } else {
+        uint8 irq = vector - 32;
+        
+        switch (irq) {
+            case 0:
+                irq0_handler();
+                break;
+            case 1:
+                keyboard_irq();
+                break;
+            default:
+                serial_write("Unhandled IRQ: ");
+                serial_write_hex(irq);
+                serial_write_char('\n');
+                break;
+        }
+
+        pic_send_eoi(irq);
+        return;
+    }
 }
 
 void idt_setgate(uint8 vector, void *isr, uint8 flags) {
@@ -48,18 +77,6 @@ void idt_setgate(uint8 vector, void *isr, uint8 flags) {
 
 extern void *isr_stub_table[];
 
-void test(void) {
-    serial_write("recieved int 32\n");
-    pic_send_eoi(0);
-}
-
-__asm__ (
-".global eeee\n"
-"eeee:\n"
-"call test\n"
-"iretq\n"
-);
-
 void idt_init(void) {
     gdt_init();
     idtr.base = (uintptr)&idt[0];
@@ -72,8 +89,6 @@ void idt_init(void) {
 
     // PIC
     pic_remap(0x20, 0x28);
-    extern void eeee(void);
-    idt_setgate(0x20, &eeee, 0x8E);
 
     __asm__ volatile ("lidt %0" : : "m"(idtr)); //load the idt
     __asm__ volatile ("sti"); //sets the interrupt flag
