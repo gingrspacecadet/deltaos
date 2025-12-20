@@ -7,6 +7,7 @@
 #define PIT_BASE  1193182U
 
 static volatile uint64 timer_ticks = 0;
+static volatile uint32 timer_freq = 0;
 
 void arch_timer_tick(void) {
     timer_ticks++;
@@ -18,7 +19,7 @@ uint64 arch_timer_get_ticks(void) {
 
 void arch_timer_setfreq(uint32 hz) {
     if (hz == 0) return;
-    pit_freq = hz;
+    timer_freq = hz;
     uint16 div = (uint16)(PIT_BASE / hz);
     outb(PIT_CMD, 0b00110110);
     outb(PIT_CH0, div & 0xFF);

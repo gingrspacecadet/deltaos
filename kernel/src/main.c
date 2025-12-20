@@ -3,6 +3,7 @@
 #include <drivers/serial.h>
 #include <drivers/fb.h>
 #include <drivers/console.h>
+#include <drivers/keyboard.h>
 #include <kernel/device.h>
 
 void kernel_main(void) {
@@ -10,6 +11,7 @@ void kernel_main(void) {
     
     //initialize framebuffer
     fb_init();
+    keyboard_init();
     
     if (fb_available()) {
         //initialize console
@@ -33,6 +35,8 @@ void kernel_main(void) {
     
     //main kernel loop
     while (1) {
+        char c;
+        if (get_key(&c)) con_putc(c);
         arch_halt();
     }
 }

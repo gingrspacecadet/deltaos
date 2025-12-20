@@ -32,12 +32,6 @@ static void irq0_handler(void) {
     arch_timer_tick();
 }
 
-uint64 ticks = 0;
-
-void irq0_handler(void) {
-    ticks++;
-}
-
 void interrupt_handler(uint64 vector, uint64 error_code) {
     if (vector < 32) {
         serial_write("\nEXCEPTION\n");
