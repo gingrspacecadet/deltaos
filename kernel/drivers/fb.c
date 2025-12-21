@@ -1,6 +1,6 @@
 #include <drivers/fb.h>
 #include <boot/db.h>
-#include <drivers/serial.h>
+#include <lib/io.h>
 
 static uint32 *framebuffer = NULL;
 static uint32 fb_w = 0;
@@ -10,8 +10,9 @@ static uint32 fb_pitch = 0;
 void fb_init(void) {
     struct db_tag_framebuffer *fb = db_get_framebuffer();
     
+    set_outmode(SERIAL);
     if (!fb) {
-        serial_write("[fb] no framebuffer available\n");
+        puts("[fb] no framebuffer available\n");
         return;
     }
     
@@ -20,13 +21,7 @@ void fb_init(void) {
     fb_h = fb->height;
     fb_pitch = fb->pitch;
     
-    serial_write("[fb] initialized: ");
-    serial_write_hex(fb_w);
-    serial_write("x");
-    serial_write_hex(fb_h);
-    serial_write(" @ ");
-    serial_write_hex(fb->address);
-    serial_write("\n");
+    printf("[fb] initialised: %dx%d@0x%x\n", fb_w, fb_h, fb->address);
 }
 
 bool fb_available(void) {

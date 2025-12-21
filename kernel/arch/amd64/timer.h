@@ -6,6 +6,7 @@
 //MI timer interface
 void arch_timer_init(uint32 hz);
 void arch_timer_setfreq(uint32 hz);
+uint32 arch_timer_getfreq(void);
 uint64 arch_timer_get_ticks(void);
 
 #endif

@@ -1,6 +1,8 @@
 #include <types.h>
-#include <io/port.h>
-#include <int/pic.h>
+#include <arch/io.h>
+#include <arch/timer.h>
+#include <arch/interrupts.h>
+#include <arch/cpu.h>
 
 #define KBD_STATUS      0x64
 #define KBD_SC          0x60
@@ -55,4 +57,8 @@ bool get_key(char *c) {
 
 void keyboard_init(void) {
     pic_clear_mask(0x1);
+}
+
+void keyboard_wait(void) {
+    while (head == tail) arch_halt();
 }

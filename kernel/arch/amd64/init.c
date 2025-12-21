@@ -2,32 +2,39 @@
 #include <arch/amd64/interrupts.h>
 #include <arch/amd64/timer.h>
 #include <boot/db.h>
-#include <drivers/serial.h>
+#include <lib/io.h>
 
 extern void kernel_main(void);
 
 void arch_init(struct db_boot_info *boot_info) {
     //early console for debugging
     serial_init();
-    serial_write("\x1b[2J\x1b[H");
-    serial_write("[amd64] initializing...\n");
+    set_outmode(SERIAL);
+
+    puts("\x1b[2J\x1b[H");
+    puts("[amd64] initializing...\n");
     
     //parse boot info from bootloader
     db_parse(boot_info);
+
+    char *cmdline = db_get_cmdline();
+    if (cmdline) {
+        printf("[amd64] cmdline = '%s'\n", cmdline);
+    }
     
     //set up interrupt infrastructure
     arch_interrupts_init();
-    serial_write("[amd64] interrupts initialized\n");
+    puts("[amd64] interrupts initialized\n");
     
     //enable interrupts
     arch_interrupts_enable();
-    serial_write("[amd64] interrupts enabled\n");
+    puts("[amd64] interrupts enabled\n");
     
     //initialize timer at 100Hz
     arch_timer_init(100);
-    serial_write("[amd64] timer initialized @ 100Hz\n");
+    puts("[amd64] timer initialized @ 100Hz\n");
     
     //jump to MI kernel
-    serial_write("[amd64] jumping to kernel_main\n\n");
+    puts("[amd64] jumping to kernel_main\n\n");
     kernel_main();
 }

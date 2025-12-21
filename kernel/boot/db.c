@@ -1,5 +1,5 @@
 #include <boot/db.h>
-#include <drivers/serial.h>
+#include <lib/io.h>
 
 static struct db_boot_info *boot_info = NULL;
 static struct db_tag_framebuffer *cached_fb = NULL;
@@ -9,13 +9,14 @@ static struct db_tag_cmdline *cached_cmdline = NULL;
 static struct db_tag_efi_system_table *cached_efi = NULL;
 
 void db_parse(struct db_boot_info *info) {
+    set_outmode(SERIAL);
     if (!info) {
-        serial_write("[db] ERROR: null boot info\n");
+        puts("[db] ERROR: null boot info\n");
         return;
     }
     
     if (info->magic != DB_BOOT_INFO_MAGIC) {
-        serial_write("[db] ERROR: invalid boot info magic\n");
+        puts("[db] ERROR: invalid boot info magic\n");
         return;
     }
     
