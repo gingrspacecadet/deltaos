@@ -1,8 +1,8 @@
 #include <arch/amd64/types.h>
 #include <arch/amd64/interrupts.h>
 #include <arch/amd64/timer.h>
-#include <drivers/serial.h>
 #include <drivers/keyboard.h>
+#include <lib/io.h>
 
 struct idt_entry {
 	uint16    isr_low;      // The lower 16 bits of the ISR's address
@@ -33,13 +33,11 @@ static void irq0_handler(void) {
 }
 
 void interrupt_handler(uint64 vector, uint64 error_code) {
+    set_outmode(SERIAL);
     if (vector < 32) {
-        serial_write("\nEXCEPTION\n");
-        serial_write("Vector:     ");
-        serial_write_hex(vector);
-        serial_write("\nError Code: ");
-        serial_write_hex(error_code);
-        serial_write("\n");
+        puts("\n---CPU EXCEPTION OCCURRED---\n");
+        printf("Vector:    0x%x\n", vector);
+        printf("Error code:    0x%x\n", error_code);
         return;
     } else {
         uint8 irq = vector - 32;
@@ -52,9 +50,7 @@ void interrupt_handler(uint64 vector, uint64 error_code) {
                 keyboard_irq();
                 break;
             default:
-                serial_write("Unhandled IRQ: ");
-                serial_write_hex(irq);
-                serial_write_char('\n');
+                printf("Unhandled IRQ: 0x%x\n", irq);
                 break;
         }
 

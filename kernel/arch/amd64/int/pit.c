@@ -26,6 +26,10 @@ void arch_timer_setfreq(uint32 hz) {
     outb(PIT_CH0, (div >> 8) & 0xFF);
 }
 
+uint32 arch_timer_getfreq(void) {
+    return timer_freq;
+}
+
 void arch_timer_init(uint32 hz) {
     arch_timer_setfreq(hz);
     pic_clear_mask(0);
