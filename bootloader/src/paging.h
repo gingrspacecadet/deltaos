@@ -25,6 +25,9 @@
 //higher-half virtual base (canonical -2GB)
 #define KERNEL_VMA      0xFFFFFFFF80000000ULL
 
+//higher-half direct map (HHDM) base (canonical -128TB)
+#define HHDM_OFFSET     0xFFFF800000000000ULL
+
 //page table structure (512 entries, 4KB each level)
 typedef uint64_t page_entry_t;
 
@@ -56,7 +59,7 @@ EFI_STATUS paging_map_4kb(
     uint64_t flags
 );
 
-//set up identity mapping from UEFI memory map
+//identity map from UEFI memory map
 EFI_STATUS paging_identity_map(
     EFI_BOOT_SERVICES *bs,
     page_tables_t *pt,
@@ -65,8 +68,14 @@ EFI_STATUS paging_identity_map(
     UINTN desc_size
 );
 
-//set up higher-half mapping: KERNEL_VMA -> 0 physical
-EFI_STATUS paging_map_higher_half(EFI_BOOT_SERVICES *bs, page_tables_t *pt, uint64_t size_gb);
+//map all physical RAM to HHDM offset
+EFI_STATUS paging_map_hhdm(
+    EFI_BOOT_SERVICES *bs,
+    page_tables_t *pt,
+    EFI_MEMORY_DESCRIPTOR *mmap,
+    UINTN mmap_size,
+    UINTN desc_size
+);
 
 //map kernel: virt_base -> phys_base for size bytes (2MB aligned)
 EFI_STATUS paging_map_kernel(

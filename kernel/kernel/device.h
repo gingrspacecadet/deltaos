@@ -13,6 +13,7 @@ enum device_type {
     DEV_SOUND,       //audio device
     DEV_BUS,         //bus controller
     DEV_TIMER,       //timer device
+    DEV_TIME,        //time/date device
     DEV_OTHER        //misc
 };
 
@@ -45,6 +46,9 @@ enum device_subtype {
     SUBDEV_PCI,
     SUBDEV_USB,
     SUBDEV_I2C,
+
+    //time devices
+    SUBDEV_RTC,
     
     SUBDEV_NONE = 0xFF
 };

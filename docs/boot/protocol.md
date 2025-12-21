@@ -279,6 +279,7 @@ struct db_tag {
 | 0x0009 | `DB_TAG_KERNEL_FILE`    | Original kernel file info          |
 | 0x000A | `DB_TAG_EFI_SYSTEM_TABLE` | EFI System Table pointer (if UEFI) |
 | 0x000B | `DB_TAG_INITRD`         | Initial ramdisk (initrd/initramfs) |
+| 0x000C | `DB_TAG_KERNEL_PHYS`    | Physical memory footprint of kernel |
 | 0x8000+ | Vendor-specific        | Reserved for custom extensions     |
 
 ---
@@ -428,6 +429,22 @@ struct db_tag_initrd {
 - Memory region is marked as `DB_MEM_INITRD` in the memory map (reclaimable after use)
 
 ---
+
+### DB_TAG_KERNEL_PHYS (0x000C)
+
+Provides the exact physical memory footprint of the loaded kernel.
+This is used by the kernel to reserve its own physical pages in the
+memory manager.
+
+```c
+struct db_tag_kernel_phys {
+    u16 type;           // 0x000C
+    u16 flags;          // 0
+    u32 size;           // Tag size (24)
+    u64 phys_base;      // Physical start address of kernel
+    u64 phys_length;    // Total length in bytes
+};
+```
 
 ### DB_TAG_ACPI_RSDP (0x0005)
 

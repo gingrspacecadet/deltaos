@@ -4,9 +4,12 @@
 #include <drivers/fb.h>
 #include <drivers/console.h>
 #include <drivers/keyboard.h>
+#include <drivers/rtc.h>
 #include <kernel/device.h>
 #include <lib/string.h>
 #include <lib/io.h>
+#include <mm/mm.h>
+#include <mm/pmm.h>
 
 void kernel_main(void) {
     set_outmode(SERIAL);
@@ -15,6 +18,7 @@ void kernel_main(void) {
     //initialize framebuffer
     fb_init();
     keyboard_init();
+    rtc_init();
     
     if (fb_available()) {
         //initialize console
@@ -80,8 +84,14 @@ void kernel_main(void) {
             }
         }
 
-        if (strcmp(strtok(buffer, " "), "help") == 0) {
-            puts("HELP MEEEE\n");
+        if (strcmp(buffer, "help") == 0) {
+            puts("Available commands: help, time\n");
+        } else if (strcmp(buffer, "time") == 0) {
+            rtc_time_t time;
+            rtc_get_time(&time);
+            printf("Current time: %d:%d:%d %d/%d/%d\n", 
+                time.hour, time.minute, time.second,
+                time.day, time.month, time.year);
         } else if (buffer[0] != '\0') {
             printf("%s: command not found\n", buffer);
         }
