@@ -7,6 +7,8 @@ static struct db_tag_memory_map *cached_mmap = NULL;
 static struct db_tag_bootloader *cached_bootloader = NULL;
 static struct db_tag_cmdline *cached_cmdline = NULL;
 static struct db_tag_efi_system_table *cached_efi = NULL;
+static struct db_tag_kernel_phys *cached_kernel_phys = NULL;
+static struct db_tag_initrd *cached_initrd = NULL;
 
 void db_parse(struct db_boot_info *info) {
     if (!info) {
@@ -38,6 +40,12 @@ void db_parse(struct db_boot_info *info) {
             case DB_TAG_EFI_SYSTEM_TABLE:
                 cached_efi = (struct db_tag_efi_system_table *)tag;
                 break;
+            case DB_TAG_KERNEL_PHYS:
+                cached_kernel_phys = (struct db_tag_kernel_phys *)tag;
+                break;
+            case DB_TAG_INITRD:
+                cached_initrd = (struct db_tag_initrd *)tag;
+                break;
             default:
                 break;
         }
@@ -50,6 +58,18 @@ struct db_tag_framebuffer *db_get_framebuffer(void) {
 
 struct db_tag_memory_map *db_get_memory_map(void) {
     return cached_mmap;
+}
+
+struct db_boot_info *db_get_boot_info(void) {
+    return boot_info;
+}
+
+struct db_tag_kernel_phys *db_get_kernel_phys(void) {
+    return cached_kernel_phys;
+}
+
+struct db_tag_initrd *db_get_initrd(void) {
+    return cached_initrd;
 }
 
 const char *db_get_bootloader_name(void) {

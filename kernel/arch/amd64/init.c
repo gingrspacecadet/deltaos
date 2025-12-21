@@ -5,6 +5,7 @@
 #include <lib/io.h>
 #include <drivers/serial.h>
 #include <mm/pmm.h>
+#include <mm/mm.h>
 
 extern void kernel_main(void);
 
@@ -16,6 +17,9 @@ void arch_init(struct db_boot_info *boot_info) {
     puts("\x1b[2J\x1b[H");
     puts("[amd64] initializing...\n");
     
+    //convert physical boot_info from bootloader to virtual via HHDM
+    boot_info = (struct db_boot_info *)P2V(boot_info);
+
     //parse boot info from bootloader
     db_parse(boot_info);
 

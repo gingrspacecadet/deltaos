@@ -6,6 +6,7 @@
 //request header (embedded in kernel)
 #define DB_REQUEST_MAGIC    0x44420001  //'D' 'B' 0x00 0x01
 #define DB_BOOT_INFO_MAGIC  0x44424F4B  //'D' 'B' 'O' 'K'
+#define DB_PROTOCOL_VERSION 0x0001
 
 //request flags
 #define DB_REQ_FRAMEBUFFER  (1 << 0)
@@ -91,6 +92,7 @@ struct db_boot_info {
 #define DB_TAG_KERNEL_FILE      0x0009
 #define DB_TAG_EFI_SYSTEM_TABLE 0x000A
 #define DB_TAG_INITRD           0x000B
+#define DB_TAG_KERNEL_PHYS      0x000C
 
 struct db_tag {
     uint16_t type;
@@ -193,6 +195,15 @@ struct db_tag_initrd {
     uint32_t size;
     uint64_t start;
     uint64_t length;
+} __attribute__((packed));
+
+//DB_TAG_KERNEL_PHYS
+struct db_tag_kernel_phys {
+    uint16_t type;          //0x000C
+    uint16_t flags;
+    uint32_t size;
+    uint64_t phys_base;
+    uint64_t phys_length;
 } __attribute__((packed));
 
 //macros

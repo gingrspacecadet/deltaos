@@ -6,6 +6,7 @@
 //request header (embedded in kernel)
 #define DB_REQUEST_MAGIC    0x44420001  //'D' 'B' 0x00 0x01
 #define DB_BOOT_INFO_MAGIC  0x44424F4B  //'D' 'B' 'O' 'K'
+#define DB_PROTOCOL_VERSION 0x0001
 
 //request flags
 #define DB_REQ_FRAMEBUFFER  (1 << 0)
@@ -38,6 +39,7 @@ struct db_boot_info {
 #define DB_TAG_KERNEL_FILE      0x0009
 #define DB_TAG_EFI_SYSTEM_TABLE 0x000A
 #define DB_TAG_INITRD           0x000B
+#define DB_TAG_KERNEL_PHYS      0x000C
 
 struct db_tag {
     uint16 type;
@@ -134,6 +136,15 @@ struct db_tag_initrd {
     uint64 length;
 } __attribute__((packed));
 
+//DB_TAG_KERNEL_PHYS
+struct db_tag_kernel_phys {
+    uint16 type;          //0x000C
+    uint16 flags;
+    uint32 size;
+    uint64 phys_base;
+    uint64 phys_length;
+} __attribute__((packed));
+
 //macros
 #define DB_ALIGN8(x) (((x) + 7) & ~7)
 
@@ -144,8 +155,11 @@ struct db_tag_initrd {
 
 //parser functions
 void db_parse(struct db_boot_info *info);
+struct db_boot_info *db_get_boot_info(void);
 struct db_tag_framebuffer *db_get_framebuffer(void);
 struct db_tag_memory_map *db_get_memory_map(void);
+struct db_tag_kernel_phys *db_get_kernel_phys(void);
+struct db_tag_initrd *db_get_initrd(void);
 const char *db_get_bootloader_name(void);
 const char *db_get_cmdline(void);
 

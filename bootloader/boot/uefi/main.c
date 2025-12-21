@@ -54,13 +54,14 @@ static struct db_boot_info *build_boot_info(
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop,
     EFI_MEMORY_DESCRIPTOR *mmap,
     UINTN mmap_size,
-    UINTN desc_size
+    UINTN desc_size,
+    elf_load_info_t *load_info
 ) {
     struct db_boot_info *info = (struct db_boot_info *)boot_info_buffer;
     uint8_t *ptr = boot_info_buffer + sizeof(struct db_boot_info);
     
     info->magic = DB_BOOT_INFO_MAGIC;
-    info->version = 0x0001;
+    info->version = DB_PROTOCOL_VERSION;
     info->reserved = 0;
     
     //DB_TAG_BOOTLOADER
@@ -135,6 +136,17 @@ static struct db_boot_info *build_boot_info(
         tag->flags = 0;
         tag->size = sizeof(struct db_tag_efi_system_table);
         tag->system_table = (uint64_t)gST;
+        ptr += DB_ALIGN8(tag->size);
+    }
+
+    //DB_TAG_KERNEL_PHYS
+    if (load_info && load_info->phys_base) {
+        struct db_tag_kernel_phys *tag = (struct db_tag_kernel_phys *)ptr;
+        tag->type = DB_TAG_KERNEL_PHYS;
+        tag->flags = 0;
+        tag->size = sizeof(struct db_tag_kernel_phys);
+        tag->phys_base = load_info->phys_base;
+        tag->phys_length = load_info->phys_end - load_info->phys_base;
         ptr += DB_ALIGN8(tag->size);
     }
     
@@ -345,7 +357,16 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
             return status;
         }
         
-        //map framebuffer explicitly (may be above 4GB on real hardware)
+        //map entire physical memory to HHDM
+        status = paging_map_hhdm(gBS, &page_tables, mmap, mmap_size, desc_size);
+        if (EFI_ERROR(status)) {
+            con_set_color(COLOR_RED, 0);
+            con_print_at(40, 80, "Failed HHDM map");
+            gBS->Stall(3000000);
+            return status;
+        }
+
+        //map framebuffer explicitly (identity + HHDM)
         uint64_t fb_base = gop->Mode->FrameBufferBase;
         uint64_t fb_size = gop->Mode->FrameBufferSize;
         status = paging_map_framebuffer(gBS, &page_tables, fb_base, fb_size);
@@ -369,7 +390,7 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
     }
     
     //build boot info
-    struct db_boot_info *boot_info = build_boot_info(req_flags, cmdline, gop, mmap, mmap_size, desc_size);
+    struct db_boot_info *boot_info = build_boot_info(req_flags, cmdline, gop, mmap, mmap_size, desc_size, &load_info);
     
     con_print_at(40, 60, "Booting...");
     gBS->Stall(500000);
@@ -391,7 +412,7 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
     }
     
     //rebuild with fresh map
-    boot_info = build_boot_info(req_flags, cmdline, gop, mmap, mmap_size, desc_size);
+    boot_info = build_boot_info(req_flags, cmdline, gop, mmap, mmap_size, desc_size, &load_info);
     
     //exit boot services
     status = gBS->ExitBootServices(gImageHandle, mmap_key);
@@ -406,7 +427,7 @@ EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable
                 desc->VirtualStart = desc->PhysicalStart;
                 ptr += desc_size;
             }
-            boot_info = build_boot_info(req_flags, cmdline, gop, mmap, mmap_size, desc_size);
+            boot_info = build_boot_info(req_flags, cmdline, gop, mmap, mmap_size, desc_size, &load_info);
             status = gBS->ExitBootServices(gImageHandle, mmap_key);
         }
     }

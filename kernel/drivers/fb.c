@@ -1,6 +1,7 @@
 #include <drivers/fb.h>
 #include <boot/db.h>
 #include <lib/io.h>
+#include <mm/mm.h>
 
 static uint32 *framebuffer = NULL;
 static uint32 fb_w = 0;
@@ -15,7 +16,7 @@ void fb_init(void) {
         return;
     }
     
-    framebuffer = (uint32 *)(uintptr)fb->address;
+    framebuffer = (uint32 *)P2V(fb->address);
     fb_w = fb->width;
     fb_h = fb->height;
     fb_pitch = fb->pitch;

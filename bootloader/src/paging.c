@@ -163,15 +163,41 @@ EFI_STATUS paging_identity_map(
     return EFI_SUCCESS;
 }
 
-EFI_STATUS paging_map_higher_half(EFI_BOOT_SERVICES *bs, page_tables_t *pt, uint64_t size_gb) {
+
+EFI_STATUS paging_map_hhdm(
+    EFI_BOOT_SERVICES *bs,
+    page_tables_t *pt,
+    EFI_MEMORY_DESCRIPTOR *mmap,
+    UINTN mmap_size,
+    UINTN desc_size
+) {
     EFI_STATUS status;
-    uint64_t num_2mb_pages = (size_gb * PAGE_SIZE_1G) / PAGE_SIZE_2M;
+    UINTN entry_count = mmap_size / desc_size;
+    uint8_t *ptr = (uint8_t *)mmap;
     
-    for (uint64_t i = 0; i < num_2mb_pages; i++) {
-        uint64_t phys = i * PAGE_SIZE_2M;
-        uint64_t virt = KERNEL_VMA + phys;
-        status = paging_map_2mb(bs, pt, virt, phys, PTE_WRITABLE);
-        if (EFI_ERROR(status)) return status;
+    for (UINTN i = 0; i < entry_count; i++) {
+        EFI_MEMORY_DESCRIPTOR *desc = (EFI_MEMORY_DESCRIPTOR *)ptr;
+        
+        //skip unusable memory
+        if (desc->Type == EfiUnusableMemory) {
+            ptr += desc_size;
+            continue;
+        }
+
+        uint64_t start = desc->PhysicalStart;
+        uint64_t end = start + (desc->NumberOfPages * PAGE_SIZE_4K);
+        
+        //round to 2MB for efficiency
+        uint64_t map_start = start & ~(PAGE_SIZE_2M - 1);
+        uint64_t map_end = (end + PAGE_SIZE_2M - 1) & ~(PAGE_SIZE_2M - 1);
+        
+        for (uint64_t addr = map_start; addr < map_end; addr += PAGE_SIZE_2M) {
+            uint64_t virt = HHDM_OFFSET + addr;
+            status = paging_map_2mb(bs, pt, virt, addr, PTE_WRITABLE);
+            if (EFI_ERROR(status)) return status;
+        }
+        
+        ptr += desc_size;
     }
     
     return EFI_SUCCESS;
@@ -220,7 +246,13 @@ EFI_STATUS paging_map_framebuffer(
     //map each 2MB page with write-combining attributes
     //PTE_NOCACHE + PTE_WRITETHROUGH = write-combining (PAT dependent but safe fallback)
     for (uint64_t addr = start; addr < end; addr += PAGE_SIZE_2M) {
+        //identity map
         status = paging_map_2mb(bs, pt, addr, addr, 
+            PTE_WRITABLE | PTE_NOCACHE | PTE_WRITETHROUGH);
+        if (EFI_ERROR(status)) return status;
+
+        //HHDM map
+        status = paging_map_2mb(bs, pt, HHDM_OFFSET + addr, addr, 
             PTE_WRITABLE | PTE_NOCACHE | PTE_WRITETHROUGH);
         if (EFI_ERROR(status)) return status;
     }
