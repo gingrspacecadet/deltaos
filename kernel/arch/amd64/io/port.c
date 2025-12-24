@@ -9,3 +9,13 @@ uint8 inb(uint16 port) {
 void outb(uint16 port, uint8 value) {
     __asm__ volatile ("outb %0, %1" : : "a"(value), "Nd"(port));
 }
+
+uint32 inl(uint16 port) {
+    uint32 result;
+    __asm__ volatile ("inl %1, %0" : "=a"(result) : "Nd"(port));
+    return result;
+}
+
+void outl(uint16 port, uint32 value) {
+    __asm__ volatile ("outl %0, %1" : : "a"(value), "Nd"(port));
+}
