@@ -13,6 +13,7 @@
 #include <drivers/pci.h>
 
 extern void kernel_main(void);
+extern void enable_sse(void);
 
 void arch_init(struct db_boot_info *boot_info) {
     //early console for debugging
@@ -38,6 +39,9 @@ void arch_init(struct db_boot_info *boot_info) {
     kheap_init();
     handle_init();
     proc_init();
+
+    enable_sse();
+    puts("[amd64] SSE enabled\n");
     
     //set up interrupt infrastructure
     arch_interrupts_init();
