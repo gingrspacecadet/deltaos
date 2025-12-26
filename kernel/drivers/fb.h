@@ -23,6 +23,7 @@ uint32 fb_height(void);
 void fb_clear(uint32 color);
 void fb_putpixel(uint32 x, uint32 y, uint32 color);
 void fb_fillrect(uint32 x, uint32 y, uint32 w, uint32 h, uint32 color);
+void fb_drawline(uint32 x1, uint32 y1, uint32 x2, uint32 y2, uint32 colour);
 
 // image rendering!
 void fb_drawimage(const unsigned char *src, uint32 width, uint32 height, uint32 x, uint32 y);

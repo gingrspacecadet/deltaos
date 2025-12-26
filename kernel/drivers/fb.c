@@ -144,3 +144,31 @@ void fb_scroll(uint32 lines, uint32 bg_color) {
     //clear the bottom part
     fb_fillrect(0, fb_h - lines, fb_w, lines, bg_color);
 }
+
+// uses Bresenham's algorithm
+void fb_drawline(uint32 x1, uint32 y1, uint32 x2, uint32 y2, uint32 colour) {
+    int dx = x2 - x1; if (dx < 0) dx = -dx;
+    int dy = y2 - y1; if (dy < 0) dy = -dy;
+    
+    int sx = (x1 < x2) ? 1 : -1;
+    int sy = (y1 < y2) ? 1 : -1;
+    int err = dx - dy;
+
+    while (1) {
+        fb_putpixel(x1, y1, colour);
+
+        if (x1 == x2 && y1 == y2) break;
+
+        int e2 = 2 * err;
+
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
