@@ -14,7 +14,7 @@ typedef struct {
 
 point screen(point p) {
     point n;
-    n.x = ((p.x + 1) / 2 ) * fb_width();
+    n.x = ((p.x + 1) / 2 ) * fb_height() + (fb_width() - fb_height()) / 2;
     n.y = (1 - ((p.y + 1) / 2 )) * fb_height();
     return n;
 }
