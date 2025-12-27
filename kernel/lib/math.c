@@ -39,3 +39,23 @@ double cos(double x) {
 
     return t1 - t2 + t3 - t4 + t5;
 }
+
+// https://en.wikipedia.org/wiki/Fast_inverse_square_root
+float isqrt(float a) {
+    long i;
+    float x, y;
+
+    x = a * 0.5F;
+    y  = a;
+    i  = *(long*)&y;
+    i  = 0x5f3759df - (i >> 1);
+    y = *(float*)&i;
+    y  = y * (1.5F - (x * y * y));
+    y  = y * (1.5F - (x * y * y));
+
+    return y;
+}
+
+float sqrt(float x) {
+    return 1.0 / isqrt(x);
+}

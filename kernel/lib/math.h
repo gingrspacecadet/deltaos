@@ -6,5 +6,7 @@
 double sin(double x);
 double cos(double x);
 double mod(double a, double b);
+float isqrt(float x);
+float sqrt(float x);
 
 #endif
