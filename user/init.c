@@ -1,13 +1,25 @@
-#include <system.h>
-#include <io.h>
 #include <sys/syscall.h>
+#include <system.h>
+#include <string.h>
+#include <io.h>
 
 void shell(void) {
     int kbd = open("$devices/keyboard", "r");
+    char buffer[128];
+    size l = 0;
     while (true) {
         char c;
         if (read(kbd, &c, 1)) {
+            buffer[l++] = c;
             putc(c);
+            if (c == '\n') {
+                buffer[l] = '\0';
+                char *cmd = strtok(buffer, " \t");
+                if (streq(cmd, "help")) {
+                    puts("HELP MEEEE!!!\n");
+                }
+                l = 0;
+            }
         }
     }
 }
